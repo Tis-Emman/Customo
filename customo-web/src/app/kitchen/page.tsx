@@ -1,0 +1,36 @@
+"use client";
+import { useOrders } from "@/lib/orders";
+
+export default function Kitchen() {
+  const { orders, live } = useOrders();
+  const flagged = orders.filter((o) => o.allergies.length).length;
+  return (
+    <main className="min-h-screen bg-[#1E1A16] p-8 text-[#F5EDE0]">
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="font-display text-4xl font-bold">Kitchen</h1>
+        <div className="flex items-center gap-4">
+          <span className="text-lg text-[#C9BBA6]">{orders.length} active orders · {flagged} with allergy flags</span>
+          <span className={`rounded-full px-4 py-2 font-bold ${live ? "bg-[#2F5D3A]" : "bg-[#7A2E1B]"}`}>{live ? "Live" : "Offline"}</span>
+        </div>
+      </div>
+      {orders.length === 0 && <p className="text-xl text-[#C9BBA6]">{live ? "No orders yet. New orders appear here as soon as customers confirm them." : "Can't reach the server. Start the API and this screen reconnects on its own."}</p>}
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        {orders.map((o) => (
+          <article key={o.id} className={`flex flex-col gap-3 rounded-2xl bg-[#2B2621] p-5 ${o.allergies.length ? "border-[3px] border-[#FBBF24]" : "border-[3px] border-transparent"}`}>
+            <div className="flex items-baseline justify-between"><h2 className="font-display text-4xl font-bold">Table {o.table}</h2><span className="text-[#C9BBA6]">#{o.id}</span></div>
+            <div className="text-[#C9BBA6]">{new Date(o.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+            {o.allergies.length ? (
+              <div className="rounded-xl bg-[#FBBF24] p-3 text-[#2B1600]"><div className="text-sm font-bold">ALLERGY - CHECK BEFORE COOKING</div><div className="text-2xl font-bold">{o.allergies.join(" · ")}</div></div>
+            ) : <div className="rounded-xl bg-[#3A342D] p-3 text-[#C9BBA6]">No allergies flagged</div>}
+            {o.items.map((i, k) => (
+              <div key={k}>
+                <div className="text-2xl font-bold">{i.qty}× {i.name}{i.conflict && <span className="ml-2 rounded bg-[#FBBF24] px-2 py-0.5 align-middle text-sm text-[#2B1600]">matches allergy</span>}</div>
+                {i.opts.length > 0 && <div className="text-lg text-[#C9BBA6]">+ {i.opts.join(", + ")}</div>}
+              </div>
+            ))}
+          </article>
+        ))}
+      </div>
+    </main>
+  );
+}

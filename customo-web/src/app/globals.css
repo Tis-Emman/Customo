@@ -1,0 +1,14 @@
+@import "tailwindcss";
+@theme inline {
+  --color-cream: #FBF6EE; --color-ink: #2B2118; --color-tomato: #B93A1B; --color-mute: #6B5D4F; --color-line: #E5D9C8;
+  --color-honey: #FCE9B8; --color-honeyink: #4A2800; --color-honeyedge: #D9931A; --color-leaf: #1F6B3A;
+  --font-display: var(--font-fraunces); --font-sans: var(--font-dmsans);
+}
+body { background: var(--color-cream); color: var(--color-ink); }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--color-tomato); outline-offset: 2px; }
+@layer components {
+.btn { @apply inline-flex h-11 cursor-pointer items-center justify-center rounded-xl border border-[#A8967F] bg-white px-4 text-base disabled:cursor-not-allowed disabled:opacity-40; }
+.btn-primary { @apply h-14 border-0 bg-tomato px-8 text-lg font-bold text-white; }
+.pill { @apply inline-flex h-11 cursor-pointer items-center rounded-full border border-[#CDBFAE] px-5; }
+.on { @apply border-tomato bg-[#FFF1EC] font-bold text-tomato; }
+}
