@@ -15,6 +15,7 @@ builder.Services.AddCors(o => o.AddPolicy("web", p =>
     p.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
 
 var app = builder.Build();
+var tableHold = TimeSpan.FromHours(3);   // a table stays held this long after its last activity
 app.UseCors("web");
 app.MapHub<OrdersHub>("/hubs/orders");
 
@@ -40,6 +41,12 @@ app.MapPost("/api/orders", async (NewOrderRequest req, CustomoDbContext db, IHub
 {
     if (req.Table < 1 || req.Table > 99) return Results.BadRequest("Invalid table number.");
     if (req.Items is null || req.Items.Count == 0) return Results.BadRequest("The order has no items.");
+
+    // Only the customer who holds the table may order for it
+    var table = await db.Tables.FirstOrDefaultAsync(t => t.Number == req.Table);
+    if (table is null) return Results.BadRequest("Invalid table number.");
+    if (req.TableToken is null || table.ClaimToken != req.TableToken || table.OccupiedAt < DateTime.UtcNow - tableHold)
+        return Results.Conflict("Your table is no longer reserved. Please pick it again.");
 
     var names = req.Allergies ?? new();
     var allergies = await db.Allergens.Where(a => names.Contains(a.Name)).ToListAsync();
@@ -104,6 +111,7 @@ app.MapPost("/api/orders", async (NewOrderRequest req, CustomoDbContext db, IHub
     }
 
     order.TotalAmount = order.Items.Sum(i => i.UnitPrice * i.Quantity);
+    table.OccupiedAt = DateTime.UtcNow;   // ordering restarts the 3-hour hold
     db.Orders.Add(order);
     await db.SaveChangesAsync();
 
@@ -143,6 +151,45 @@ app.MapPost("/api/orders/{id:int}/complete", async (int id, CustomoDbContext db,
     return Results.NoContent();
 });
 
+// GET /api/tables?token=...: which tables are taken ("mine" = held by the caller's browser)
+app.MapGet("/api/tables", async (CustomoDbContext db, string? token) =>
+{
+    var cutoff = DateTime.UtcNow - tableHold;
+    var rows = await db.Tables.AsNoTracking().OrderBy(t => t.Number).ToListAsync();
+    return rows.Select(t =>
+    {
+        var live = t.ClaimToken != null && t.OccupiedAt >= cutoff;
+        var mine = live && token != null && t.ClaimToken == token;
+        return new TableDto(t.Number, live && !mine, mine);
+    });
+});
+
+// POST /api/tables/{n}/claim: one atomic UPDATE, so two tablets can never win the same table
+app.MapPost("/api/tables/{number:int}/claim", async (int number, ClaimRequest req, CustomoDbContext db, IHubContext<OrdersHub> hub) =>
+{
+    if (!await db.Tables.AnyAsync(t => t.Number == number)) return Results.NotFound();
+
+    var cutoff = DateTime.UtcNow - tableHold;
+    var token = Guid.NewGuid().ToString("N");
+    var rows = await db.Tables
+        .Where(t => t.Number == number &&
+                    (t.ClaimToken == null || t.OccupiedAt < cutoff || (req.Token != null && t.ClaimToken == req.Token)))
+        .ExecuteUpdateAsync(s => s.SetProperty(t => t.ClaimToken, token).SetProperty(t => t.OccupiedAt, DateTime.UtcNow));
+
+    if (rows == 0) return Results.Conflict("That table is taken.");
+    await hub.Clients.All.SendAsync("TablesChanged");
+    return Results.Ok(new { token });
+});
+
+// POST /api/tables/{n}/release: staff free a table (no login in this version, like the rest of the kitchen screen)
+app.MapPost("/api/tables/{number:int}/release", async (int number, CustomoDbContext db, IHubContext<OrdersHub> hub) =>
+{
+    await db.Tables.Where(t => t.Number == number)
+        .ExecuteUpdateAsync(s => s.SetProperty(t => t.ClaimToken, (string?)null).SetProperty(t => t.OccupiedAt, (DateTime?)null));
+    await hub.Clients.All.SendAsync("TablesChanged");
+    return Results.NoContent();
+});
+
 app.Run();
 
 // SignalR hub: the kitchen screen connects here and listens for "OrderSubmitted"
@@ -154,7 +201,9 @@ record IngredientDto(int Id, string Name, string? Allergen, bool Removable);
 record MenuItemDto(int Id, string Name, string Cat, decimal Price, List<string> Allergens, List<IngredientDto> Ingredients, List<OptionDto> Options);
 
 record NewOrderLine(int MenuItemId, int Quantity, List<int>? OptionIds, List<int>? RemovedIngredientIds);
-record NewOrderRequest(int Table, List<string>? Allergies, List<NewOrderLine>? Items);
+record NewOrderRequest(int Table, string? TableToken, List<string>? Allergies, List<NewOrderLine>? Items);
+record TableDto(int Number, bool Taken, bool Mine);
+record ClaimRequest(string? Token);
 
 record OrderItemDto(string Name, int Qty, List<string> Opts, List<string> Removed, bool Conflict);
 record OrderDto(int Id, int Table, List<string> Allergies, List<OrderItemDto> Items, decimal Total, long CreatedAt);

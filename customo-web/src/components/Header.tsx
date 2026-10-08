@@ -10,7 +10,7 @@ export default function Header() {
         <Image src="/logo.png" alt="" width={56} height={56} className="rounded-full" />
         <span className="font-display text-3xl font-bold text-tomato">Customo</span>
       </div>
-      <span className="rounded-full bg-ink px-5 py-2 font-bold text-cream">Table {s.table}</span>
+      <span className="rounded-full bg-ink px-5 py-2 font-bold text-cream">{s.table ? `Table ${s.table}` : "No table"}</span>
     </header>
   );
 }

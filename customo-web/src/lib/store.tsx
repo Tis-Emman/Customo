@@ -4,14 +4,14 @@ import type { Dish, Ingredient, Opt } from "./menu";
 import type { Order } from "./api";
 
 export type Line = { key: string; dish: Dish; qty: number; opts: Opt[]; removed: Ingredient[] };
-type S = { table: number; allergies: string[]; cart: Line[]; last: Order | null };
+type S = { table: number; tableToken: string | null; allergies: string[]; cart: Line[]; last: Order | null };
 type A =
-  | { t: "table"; n: number } | { t: "allergies"; a: string[] } | { t: "add"; l: Line }
+  | { t: "table"; n: number; token: string } | { t: "allergies"; a: string[] } | { t: "add"; l: Line }
   | { t: "remove"; key: string } | { t: "done"; order: Order };
 
 function reduce(s: S, a: A): S {
   switch (a.t) {
-    case "table": return { ...s, table: a.n };
+    case "table": return { ...s, table: a.n, tableToken: a.token };
     case "allergies": return { ...s, allergies: a.a };
     case "add": return { ...s, cart: [...s.cart, a.l] };
     case "remove": return { ...s, cart: s.cart.filter((l) => l.key !== a.key) };
@@ -36,7 +36,7 @@ export const peso = (n: number) => `₱${n}`;
 
 const Ctx = createContext<{ s: S; d: Dispatch<A> }>(null!);
 export function Provider({ children }: { children: ReactNode }) {
-  const [s, d] = useReducer(reduce, { table: 5, allergies: [], cart: [], last: null });
+  const [s, d] = useReducer(reduce, { table: 0, tableToken: null, allergies: [], cart: [], last: null });
   return <Ctx.Provider value={{ s, d }}>{children}</Ctx.Provider>;
 }
 export const useStore = () => useContext(Ctx);

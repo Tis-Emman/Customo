@@ -1,10 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
-import { completeOrder } from "@/lib/api";
+import { completeOrder, releaseTable } from "@/lib/api";
+import { useTables } from "@/lib/tables";
 import { useOrders } from "@/lib/orders";
 
 export default function Kitchen() {
   const { orders, live, dismiss } = useOrders();
+  const { tables } = useTables(null);
+  const occupied = tables.filter((t) => t.taken);
   const [arm, setArm] = useState<number | null>(null);   // order waiting for a second tap
   const [failed, setFailed] = useState(false);
   const flagged = orders.filter((o) => o.allergies.length).length;
@@ -30,6 +33,14 @@ export default function Kitchen() {
           <span className="text-lg text-[#C9BBA6]">{orders.length} active orders · {flagged} with allergy flags</span>
           <span className={`rounded-full px-4 py-2 font-bold ${live ? "bg-[#2F5D3A]" : "bg-[#7A2E1B]"}`}>{live ? "Live" : "Offline"}</span>
         </div>
+      </div>
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        <span className="text-[#C9BBA6]">Occupied tables:</span>
+        {occupied.length === 0 && <span className="text-[#C9BBA6]">none</span>}
+        {occupied.map((t) => (
+          <button key={t.number} onClick={() => { if (window.confirm(`Free table ${t.number}?`)) releaseTable(t.number); }}
+            className="h-11 cursor-pointer rounded-full bg-[#3A342D] px-4 font-bold">Table {t.number} ✕</button>
+        ))}
       </div>
       {failed && <p role="alert" className="mb-4 rounded-xl bg-[#7A2E1B] p-3 font-bold">Could not mark the order as done. Check the connection and try again.</p>}
       {orders.length === 0 && (

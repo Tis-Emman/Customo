@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Customo.Api.Migrations
 {
     [DbContext(typeof(CustomoDbContext))]
-    [Migration("20261008085907_Ingredients")]
-    partial class Ingredients
+    [Migration("20261008091253_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -145,6 +145,72 @@ namespace Customo.Api.Migrations
                         {
                             Id = 4,
                             Name = "Drinks"
+                        });
+                });
+
+            modelBuilder.Entity("Customo.Data.DiningTable", b =>
+                {
+                    b.Property<int>("Number")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ClaimToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("OccupiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Number");
+
+                    b.ToTable("Tables");
+
+                    b.HasData(
+                        new
+                        {
+                            Number = 1
+                        },
+                        new
+                        {
+                            Number = 2
+                        },
+                        new
+                        {
+                            Number = 3
+                        },
+                        new
+                        {
+                            Number = 4
+                        },
+                        new
+                        {
+                            Number = 5
+                        },
+                        new
+                        {
+                            Number = 6
+                        },
+                        new
+                        {
+                            Number = 7
+                        },
+                        new
+                        {
+                            Number = 8
+                        },
+                        new
+                        {
+                            Number = 9
+                        },
+                        new
+                        {
+                            Number = 10
+                        },
+                        new
+                        {
+                            Number = 11
+                        },
+                        new
+                        {
+                            Number = 12
                         });
                 });
 

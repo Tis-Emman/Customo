@@ -99,6 +99,14 @@ public class OrderItemOption
     public decimal PriceDelta { get; set; }
 }
 
+// ---------- Tables ----------
+public class DiningTable
+{
+    public int Number { get; set; }             // the table number is the key
+    public string? ClaimToken { get; set; }     // secret kept in the customer's browser
+    public DateTime? OccupiedAt { get; set; }   // last activity; the hold expires after 3 hours
+}
+
 // ---------- DbContext ----------
 public class CustomoDbContext : DbContext
 {
@@ -110,6 +118,7 @@ public class CustomoDbContext : DbContext
     public DbSet<Ingredient> Ingredients => Set<Ingredient>();
     public DbSet<MenuItemIngredient> MenuItemIngredients => Set<MenuItemIngredient>();
     public DbSet<MenuItemOption> MenuItemOptions => Set<MenuItemOption>();
+    public DbSet<DiningTable> Tables => Set<DiningTable>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<OrderItemOption> OrderItemOptions => Set<OrderItemOption>();
@@ -149,6 +158,11 @@ public class CustomoDbContext : DbContext
             new Allergen { Id = 9, Name = "Shellfish" },
             new Allergen { Id = 10, Name = "Sesame" }
         );
+
+        // Tables 1 to 12, all free at the start
+        b.Entity<DiningTable>().HasKey(t => t.Number);
+        b.Entity<DiningTable>().Property(t => t.Number).ValueGeneratedNever();
+        b.Entity<DiningTable>().HasData(Enumerable.Range(1, 12).Select(n => new DiningTable { Number = n }));
 
         SeedMenu(b);
     }

@@ -18,13 +18,14 @@ export default function Review() {
     setBusy(true); setError("");
     try {
       const order = await postOrder({
-        table: s.table, allergies: s.allergies,
+        table: s.table, tableToken: s.tableToken ?? "", allergies: s.allergies,
         items: s.cart.map((l) => ({ menuItemId: l.dish.id, quantity: l.qty, optionIds: l.opts.map((o) => o.id), removedIngredientIds: l.removed.map((i) => i.id) })),
       });
       d({ t: "done", order });
       router.push("/confirmed");
-    } catch {
-      setError("We couldn't send your order. Check the connection and try again.");
+    } catch (e) {
+      const lost = e instanceof Error && e.message.includes("no longer reserved");
+      setError(lost ? "Your table is no longer reserved. Please go back and pick your table again." : "We couldn't send your order. Check the connection and try again.");
       setBusy(false);
     }
   };
