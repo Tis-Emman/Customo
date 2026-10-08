@@ -1,9 +1,27 @@
 "use client";
+import { useEffect, useState } from "react";
+import { completeOrder } from "@/lib/api";
 import { useOrders } from "@/lib/orders";
 
 export default function Kitchen() {
-  const { orders, live } = useOrders();
+  const { orders, live, dismiss } = useOrders();
+  const [arm, setArm] = useState<number | null>(null);   // order waiting for a second tap
+  const [failed, setFailed] = useState(false);
   const flagged = orders.filter((o) => o.allergies.length).length;
+
+  // The confirm state clears itself after 3 seconds
+  useEffect(() => {
+    if (arm === null) return;
+    const t = setTimeout(() => setArm(null), 3000);
+    return () => clearTimeout(t);
+  }, [arm]);
+
+  const finish = async (id: number) => {
+    if (arm !== id) { setArm(id); return; }
+    setArm(null); setFailed(false);
+    try { await completeOrder(id); dismiss(id); } catch { setFailed(true); }
+  };
+
   return (
     <main className="min-h-screen bg-[#1E1A16] p-8 text-[#F5EDE0]">
       <div className="mb-6 flex items-center justify-between">
@@ -13,7 +31,12 @@ export default function Kitchen() {
           <span className={`rounded-full px-4 py-2 font-bold ${live ? "bg-[#2F5D3A]" : "bg-[#7A2E1B]"}`}>{live ? "Live" : "Offline"}</span>
         </div>
       </div>
-      {orders.length === 0 && <p className="text-xl text-[#C9BBA6]">{live ? "No orders yet. New orders appear here as soon as customers confirm them." : "Can't reach the server. Start the API and this screen reconnects on its own."}</p>}
+      {failed && <p role="alert" className="mb-4 rounded-xl bg-[#7A2E1B] p-3 font-bold">Could not mark the order as done. Check the connection and try again.</p>}
+      {orders.length === 0 && (
+        <p className="text-xl text-[#C9BBA6]">
+          {live ? "All caught up. New orders appear here as soon as customers confirm them." : "Can't reach the server. Start the API and this screen reconnects on its own."}
+        </p>
+      )}
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {orders.map((o) => (
           <article key={o.id} className={`flex flex-col gap-3 rounded-2xl bg-[#2B2621] p-5 ${o.allergies.length ? "border-[3px] border-[#FBBF24]" : "border-[3px] border-transparent"}`}>
@@ -25,9 +48,14 @@ export default function Kitchen() {
             {o.items.map((i, k) => (
               <div key={k}>
                 <div className="text-2xl font-bold">{i.qty}× {i.name}{i.conflict && <span className="ml-2 rounded bg-[#FBBF24] px-2 py-0.5 align-middle text-sm text-[#2B1600]">matches allergy</span>}</div>
+                {i.removed.length > 0 && <div className="text-xl font-bold uppercase text-[#FF9B7A]">No {i.removed.join(", no ")}</div>}
                 {i.opts.length > 0 && <div className="text-lg text-[#C9BBA6]">+ {i.opts.join(", + ")}</div>}
               </div>
             ))}
+            <button onClick={() => finish(o.id)}
+              className={`mt-auto h-14 cursor-pointer rounded-xl text-lg font-bold ${arm === o.id ? "bg-[#FBBF24] text-[#2B1600]" : "bg-[#2F5D3A] text-white"}`}>
+              {arm === o.id ? "Tap again to confirm" : "Done"}
+            </button>
           </article>
         ))}
       </div>

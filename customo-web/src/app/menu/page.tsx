@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import { Customize, Warning } from "@/components/Dialogs";
-import { CATS, Dish } from "@/lib/menu";
+import { CATS, Dish, Ingredient } from "@/lib/menu";
 import { fetchMenu } from "@/lib/api";
-import { conflicts, peso, total, unit, useStore } from "@/lib/store";
+import { conflicts, fix, peso, total, unit, useStore } from "@/lib/store";
 
 export default function Menu() {
   const { s, d } = useStore();
@@ -14,11 +14,12 @@ export default function Menu() {
   const [cat, setCat] = useState("All");
   const [dish, setDish] = useState<Dish | null>(null);
   const [warn, setWarn] = useState(false);
+  const [pre, setPre] = useState<Ingredient[]>([]);
   const [dishes, setDishes] = useState<Dish[] | null>(null);
   const [failed, setFailed] = useState(false);
   const load = () => { setFailed(false); fetchMenu().then(setDishes).catch(() => setFailed(true)); };
   useEffect(() => { fetchMenu().then(setDishes).catch(() => setFailed(true)); }, []);
-  const pick = (x: Dish) => { setDish(x); setWarn(conflicts(x, s.allergies).length > 0); };
+  const pick = (x: Dish) => { setDish(x); setPre([]); setWarn(conflicts(x, s.allergies).length > 0); };
 
   return (
     <>
@@ -61,6 +62,7 @@ export default function Menu() {
           {s.cart.map((l) => (
             <div key={l.key} className="border-b border-line pb-3">
               <div className="flex justify-between font-bold"><span>{l.qty}× {l.dish.name}</span><span>{peso(unit(l) * l.qty)}</span></div>
+              {l.removed.map((i) => <div key={i.id} className="text-sm font-bold text-honeyink">No {i.name.toLowerCase()}</div>)}
               {l.opts.filter((o) => o.type === "Extra").map((o) => <div key={o.id} className="text-sm text-mute">+ {o.name}</div>)}
             </div>
           ))}
@@ -69,10 +71,14 @@ export default function Menu() {
         </aside>
       </main>
 
-      {dish && warn && <Warning dish={dish} hit={conflicts(dish, s.allergies)} onCancel={() => setDish(null)} onContinue={() => setWarn(false)} />}
+      {dish && warn && (
+        <Warning dish={dish} hit={conflicts(dish, s.allergies)} fix={fix(dish, s.allergies)}
+          onCancel={() => setDish(null)} onContinue={() => setWarn(false)}
+          onFix={() => { setPre(fix(dish, s.allergies) ?? []); setWarn(false); }} />
+      )}
       {dish && !warn && (
-        <Customize dish={dish} onClose={() => setDish(null)}
-          onAdd={(opts, qty) => { d({ t: "add", l: { key: crypto.randomUUID(), dish, qty, opts } }); setDish(null); }} />
+        <Customize dish={dish} allergies={s.allergies} initialRemoved={pre} onClose={() => setDish(null)}
+          onAdd={(opts, qty, removed) => { d({ t: "add", l: { key: crypto.randomUUID(), dish, qty, opts, removed } }); setDish(null); }} />
       )}
     </>
   );

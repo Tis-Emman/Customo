@@ -18,6 +18,7 @@ export function useOrders() {
       .withUrl(`${API}/hubs/orders`).withAutomaticReconnect().configureLogging(LogLevel.None).build();
 
     conn.on("OrderSubmitted", (o: Order) => setOrders((prev) => (prev.some((x) => x.id === o.id) ? prev : [...prev, o])));
+    conn.on("OrderCompleted", (id: number) => setOrders((prev) => prev.filter((x) => x.id !== id)));
     conn.onreconnecting(() => setLive(false));
     conn.onreconnected(() => { setLive(true); load(); });
     conn.onclose(() => setLive(false));
@@ -32,5 +33,6 @@ export function useOrders() {
     return () => { dead = true; clearTimeout(timer); conn.stop(); };
   }, []);
 
-  return { orders, live };
+  const dismiss = (id: number) => setOrders((prev) => prev.filter((x) => x.id !== id));
+  return { orders, live, dismiss };
 }

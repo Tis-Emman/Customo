@@ -9,7 +9,7 @@ import { postOrder } from "@/lib/api";
 export default function Review() {
   const { s, d } = useStore();
   const router = useRouter();
-  const flagged = s.cart.filter((l) => conflicts(l.dish, s.allergies).length).length;
+  const flagged = s.cart.filter((l) => conflicts(l.dish, s.allergies, l.removed).length).length;
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -19,7 +19,7 @@ export default function Review() {
     try {
       const order = await postOrder({
         table: s.table, allergies: s.allergies,
-        items: s.cart.map((l) => ({ menuItemId: l.dish.id, quantity: l.qty, optionIds: l.opts.map((o) => o.id) })),
+        items: s.cart.map((l) => ({ menuItemId: l.dish.id, quantity: l.qty, optionIds: l.opts.map((o) => o.id), removedIngredientIds: l.removed.map((i) => i.id) })),
       });
       d({ t: "done", order });
       router.push("/confirmed");
@@ -37,11 +37,12 @@ export default function Review() {
         <section className="flex flex-col gap-3">
           {s.cart.length === 0 && <p className="text-mute">Your order is empty. <Link href="/menu" className="font-bold text-tomato underline">Back to the menu</Link></p>}
           {s.cart.map((l) => {
-            const hit = conflicts(l.dish, s.allergies);
+            const hit = conflicts(l.dish, s.allergies, l.removed);
             return (
               <div key={l.key} className={`flex justify-between gap-4 rounded-2xl p-4 ${hit.length ? "border-2 border-honeyedge bg-[#FFF7E0]" : "border border-line bg-white"}`}>
                 <div>
                   <div className="font-display text-xl font-semibold">{l.qty}× {l.dish.name}</div>
+                  {l.removed.map((i) => <div key={i.id} className="text-sm font-bold text-honeyink">No {i.name.toLowerCase()}</div>)}
                   {l.opts.map((o) => <div key={o.id} className="text-sm text-mute">{o.type === "Extra" ? "+ " : ""}{o.name}</div>)}
                   {hit.length > 0 && <div className="mt-1 font-bold text-honeyink">Contains {hit.join(" and ").toLowerCase()}. Matches your allergy.</div>}
                 </div>

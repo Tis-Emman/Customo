@@ -12,7 +12,7 @@ export default function Confirmed() {
         <h1 className="text-center font-display text-4xl font-bold">Order sent to the kitchen</h1>
         <p className="text-mute">Order #{o.id} · Table {o.table}</p>
         <ul className="w-full border-y border-line py-3">
-          {o.items.map((i, k) => <li key={k} className="py-1"><b>{i.qty}× {i.name}</b>{i.opts.length > 0 && <span className="text-sm text-mute"> · {i.opts.join(", ")}</span>}</li>)}
+          {o.items.map((i, k) => <li key={k} className="py-1"><b>{i.qty}× {i.name}</b>{i.removed.length > 0 && <span className="text-sm text-mute"> · no {i.removed.join(", no ").toLowerCase()}</span>}{i.opts.length > 0 && <span className="text-sm text-mute"> · {i.opts.join(", ")}</span>}</li>)}
         </ul>
         <div className="flex w-full justify-between text-2xl font-bold"><span>Total</span><span>{peso(o.total)}</span></div>
         {o.allergies.length > 0 && <div className="w-full rounded-xl bg-honey p-3 text-honeyink">Allergies sent to the kitchen: <b>{o.allergies.join(", ")}</b></div>}
