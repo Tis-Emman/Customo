@@ -5,14 +5,16 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<CustomoDbContext>(o =>
-    o.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+    o.UseSqlServer(builder.Configuration.GetConnectionString("Default"),
+        sql => sql.EnableRetryOnFailure()));
 
 builder.Services.AddSignalR();
 
 // Let the Next.js app (port 3000) call this API and connect to the SignalR hub
-// (SignalR needs AllowCredentials, which only works with a specific origin)
+// Allowed website addresses. Locally it is localhost:3000; in the cloud it comes from the Cors__Origins__0 setting.
+var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? new[] { "http://localhost:3000" };
 builder.Services.AddCors(o => o.AddPolicy("web", p =>
-    p.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
+    p.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
 
 var app = builder.Build();
 var tableHold = TimeSpan.FromHours(3);   // a table stays held this long after its last activity
