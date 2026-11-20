@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ChevronLeft, CircleCheck, X } from "lucide-react";
 import {
   ApiError, changeStock, fetchInventory, fetchMovements, Movement, saveStockSettings,
   StockItem, StockKind, stockStatus, StockStatus,
@@ -43,7 +44,7 @@ export default function Inventory() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Link href="/kitchen" className="flex h-11 items-center gap-1 rounded-full bg-[#3A342D] px-4 font-bold">
-            <span aria-hidden="true" className="text-2xl leading-none">‹</span> Kitchen
+            <ChevronLeft aria-hidden="true" className="h-5 w-5" /> Kitchen
           </Link>
           <h1 className="font-display text-4xl font-bold">Inventory</h1>
         </div>
@@ -74,7 +75,11 @@ export default function Inventory() {
         </p>
       )}
       {!items && !failed && <p className="text-[#C9BBA6]">Loading inventory…</p>}
-      {items && shown.length === 0 && <p className="text-[#C9BBA6]">{filter === "attention" ? "Nothing is low or out. 👍" : "No ingredients match."}</p>}
+      {items && shown.length === 0 && (
+        <p className="flex items-center gap-2 text-[#C9BBA6]">
+          {filter === "attention" ? <><CircleCheck aria-hidden="true" className="h-5 w-5 text-[#8FD19E]" /> Nothing is low or out.</> : "No ingredients match."}
+        </p>
+      )}
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {shown.map((i) => {
@@ -182,7 +187,7 @@ function Manage({ item, onClose, onSaved }: { item: StockItem; onClose: () => vo
             <h2 id="inv-title" className="font-display text-3xl font-bold">{item.name}</h2>
             <p className="text-sm text-[#C9BBA6]">Used in: {item.usedIn.join(", ") || "no dishes"}</p>
           </div>
-          <button aria-label="Close" onClick={onClose} className="h-11 w-11 shrink-0 cursor-pointer rounded-full bg-[#3A342D] text-2xl">×</button>
+          <button aria-label="Close" onClick={onClose} className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#3A342D]"><X aria-hidden="true" className="h-5 w-5" /></button>
         </div>
 
         <div className="flex items-center justify-between rounded-xl bg-[#1E1A16] p-4">

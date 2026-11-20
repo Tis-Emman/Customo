@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { canOrder, useStore, where } from "@/lib/store";
 
 // back: where the "Back" button goes (leave it out to hide the button)
@@ -21,7 +22,7 @@ export default function Header({ back }: { back?: string }) {
 export function BackButton({ href, label = "Back" }: { href: string; label?: string }) {
   return (
     <Link href={href} className="btn h-12 gap-1 pr-5 text-lg font-bold" aria-label={label}>
-      <span aria-hidden="true" className="text-2xl leading-none">‹</span> {label}
+      <ChevronLeft aria-hidden="true" className="h-5 w-5" /> {label}
     </Link>
   );
 }

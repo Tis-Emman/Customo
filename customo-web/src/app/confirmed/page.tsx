@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { peso, useStore } from "@/lib/store";
 
 export default function Confirmed() {
@@ -35,7 +36,7 @@ export default function Confirmed() {
         {o.allergies.length > 0 && <div className="w-full rounded-xl bg-honey p-3 text-honeyink">Allergies sent to the kitchen: <b>{o.allergies.join(", ")}</b></div>}
         <Link href="/menu" className="btn btn-primary w-full">{takeOut ? "Order more (gets a new number)" : `Order more for Table ${o.table}`}</Link>
         <button className="btn h-14 w-full text-lg" onClick={startOver}>
-          <span aria-hidden="true" className="mr-1 text-2xl leading-none">‹</span> Back to start (new order)
+          <ChevronLeft aria-hidden="true" className="mr-1 h-5 w-5" /> Back to start (new order)
         </button>
       </div>
     </main>

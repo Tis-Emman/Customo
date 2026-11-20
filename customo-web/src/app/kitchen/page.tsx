@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { X } from "lucide-react";
 import { completeOrder, fetchInventory, releaseTable, StockItem, stockStatus } from "@/lib/api";
 import { useLive } from "@/lib/live";
 import { useTables } from "@/lib/tables";
@@ -95,7 +96,9 @@ export default function Kitchen() {
             title={t.ordered ? "Ordered. Stays occupied until you free it." : "Picked on a tablet, no order yet"}
             className={`h-11 cursor-pointer rounded-full px-4 font-bold ${t.ordered ? "bg-[#3A342D]" : "border-2 border-dashed border-[#6B5D4F] bg-transparent text-[#C9BBA6]"}`}
           >
-            Table {t.number}{!t.ordered && " (no order yet)"} ✕
+            <span className="flex items-center gap-1.5">
+              Table {t.number}{!t.ordered && " (no order yet)"} <X aria-hidden="true" className="h-4 w-4" />
+            </span>
           </button>
         ))}
       </div>

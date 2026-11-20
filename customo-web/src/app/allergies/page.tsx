@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { Check } from "lucide-react";
 import { BackButton, NeedsSession } from "@/components/Header";
 import { ALLERGENS } from "@/lib/menu";
 import { useStore, where } from "@/lib/store";
@@ -42,12 +43,11 @@ function AllergyPicker() {
               }`}
             >
               {on && (
-                <span
+                <Check
                   aria-hidden="true"
-                  className="absolute left-4 top-1/2 -translate-y-1/2"
-                >
-                  ✓
-                </span>
+                  className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2"
+                  strokeWidth={3}
+                />
               )}
               {a}
             </button>

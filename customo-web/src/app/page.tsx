@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { ChevronLeft, ShoppingBag, UtensilsCrossed } from "lucide-react";
 import { claimTable, leaveTable } from "@/lib/api";
 import { useTables } from "@/lib/tables";
 import { useStore } from "@/lib/store";
@@ -64,13 +65,13 @@ export default function Welcome() {
         <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
           <button onClick={() => d({ t: "mode", m: "DineIn" })}
             className="flex h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[#CDBFAE] bg-white hover:border-tomato">
-            <span aria-hidden="true" className="text-5xl">🍽️</span>
+            <UtensilsCrossed aria-hidden="true" className="h-12 w-12 text-tomato" strokeWidth={1.75} />
             <span className="font-display text-3xl font-bold">Dine in</span>
             <span className="text-mute">Eat here at a table</span>
           </button>
           <button onClick={takeOut}
             className="flex h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[#CDBFAE] bg-white hover:border-tomato">
-            <span aria-hidden="true" className="text-5xl">🛍️</span>
+            <ShoppingBag aria-hidden="true" className="h-12 w-12 text-tomato" strokeWidth={1.75} />
             <span className="font-display text-3xl font-bold">Take out</span>
             <span className="text-mute">Pack it to go</span>
           </button>
@@ -84,7 +85,7 @@ export default function Welcome() {
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-6 p-6 text-center">
       <div className="flex w-full justify-start">
         <button className="btn h-12 gap-1 pr-5 text-lg font-bold" onClick={() => { setNote(""); d({ t: "mode", m: null }); }}>
-          <span aria-hidden="true" className="text-2xl leading-none">‹</span> Back
+          <ChevronLeft aria-hidden="true" className="h-5 w-5" /> Back
         </button>
       </div>
       <Image src="/logo.png" alt="Customo" width={180} height={180} priority className="rounded-full" />

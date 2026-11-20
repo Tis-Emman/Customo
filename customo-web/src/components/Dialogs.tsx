@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { TriangleExclamationPoint, X } from "lucide-react";
 import type { Dish, Ingredient, Opt } from "@/lib/menu";
 import { conflicts, peso } from "@/lib/store";
 
@@ -58,7 +59,7 @@ export function Customize({ dish, allergies, initialRemoved, onClose, onAdd }: C
     <Modal label={dish.name}>
       <div className="flex items-center justify-between">
         <h2 className="font-display text-3xl font-bold">{dish.name}</h2>
-        <button className="btn w-11 !rounded-full text-2xl" aria-label="Close" onClick={onClose}>×</button>
+        <button className="btn w-11 !rounded-full !px-0" aria-label="Close" onClick={onClose}><X aria-hidden="true" className="h-5 w-5" /></button>
       </div>
       <p className={`font-bold ${hit.length ? "text-honeyink" : "text-leaf"}`}>
         {hit.length ? `Still contains ${hit.join(" and ").toLowerCase()}, which matches your allergies.` : "No flagged allergens for you"}
@@ -76,7 +77,9 @@ export function Customize({ dish, allergies, initialRemoved, onClose, onAdd }: C
               return (
                 <button key={i.id} disabled={!i.removable || (soldOut && off)} aria-pressed={!off} onClick={() => toggleIng(i)}
                   className={`btn h-10 text-sm disabled:opacity-70 ${off ? "line-through opacity-60" : ""} ${flagged ? "!border-2 !border-honeyedge !bg-honey font-bold text-honeyink" : ""}`}>
-                  {off ? `No ${i.name.toLowerCase()}` : i.name}{flagged ? " ⚠" : ""}{soldOut ? " (sold out)" : !i.removable ? " (required)" : ""}
+                  {off ? `No ${i.name.toLowerCase()}` : i.name}
+                  {flagged && <TriangleExclamationPoint aria-label="matches your allergy" className="ml-1 h-4 w-4" />}
+                  {soldOut ? " (sold out)" : !i.removable ? " (required)" : ""}
                 </button>
               );
             })}
