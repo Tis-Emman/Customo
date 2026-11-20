@@ -1,9 +1,14 @@
 "use client";
 import Link from "next/link";
+import { BackButton, NeedsSession } from "@/components/Header";
 import { ALLERGENS } from "@/lib/menu";
-import { useStore } from "@/lib/store";
+import { useStore, where } from "@/lib/store";
 
 export default function Allergies() {
+  return <NeedsSession><AllergyPicker /></NeedsSession>;
+}
+
+function AllergyPicker() {
   const { s, d } = useStore();
   const toggle = (a: string) =>
     d({
@@ -14,6 +19,10 @@ export default function Allergies() {
     });
   return (
     <main className="mx-auto flex min-h-screen max-w-4xl flex-col items-center justify-center gap-6 p-6 text-center">
+      <div className="flex w-full items-center justify-between">
+        <BackButton href="/" />
+        <span className="rounded-full bg-ink px-5 py-2 font-bold text-cream">{where(s)}</span>
+      </div>
       <h1 className="font-display text-4xl font-bold">Any food allergies?</h1>
       <p className="text-lg text-mute">
         Tap all that apply. We will warn you on dishes and tell the kitchen.

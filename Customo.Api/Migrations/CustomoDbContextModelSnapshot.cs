@@ -153,6 +153,9 @@ namespace Customo.Api.Migrations
                     b.Property<string>("ClaimToken")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("HasOrdered")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("OccupiedAt")
                         .HasColumnType("datetime2");
 
@@ -163,51 +166,63 @@ namespace Customo.Api.Migrations
                     b.HasData(
                         new
                         {
-                            Number = 1
+                            Number = 1,
+                            HasOrdered = false
                         },
                         new
                         {
-                            Number = 2
+                            Number = 2,
+                            HasOrdered = false
                         },
                         new
                         {
-                            Number = 3
+                            Number = 3,
+                            HasOrdered = false
                         },
                         new
                         {
-                            Number = 4
+                            Number = 4,
+                            HasOrdered = false
                         },
                         new
                         {
-                            Number = 5
+                            Number = 5,
+                            HasOrdered = false
                         },
                         new
                         {
-                            Number = 6
+                            Number = 6,
+                            HasOrdered = false
                         },
                         new
                         {
-                            Number = 7
+                            Number = 7,
+                            HasOrdered = false
                         },
                         new
                         {
-                            Number = 8
+                            Number = 8,
+                            HasOrdered = false
                         },
                         new
                         {
-                            Number = 9
+                            Number = 9,
+                            HasOrdered = false
                         },
                         new
                         {
-                            Number = 10
+                            Number = 10,
+                            HasOrdered = false
                         },
                         new
                         {
-                            Number = 11
+                            Number = 11,
+                            HasOrdered = false
                         },
                         new
                         {
-                            Number = 12
+                            Number = 12,
+                            HasOrdered = false
                         });
                 });
 
@@ -222,9 +237,25 @@ namespace Customo.Api.Migrations
                     b.Property<int?>("AllergenId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal?>("LowAt")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("Stock")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
 
@@ -236,229 +267,315 @@ namespace Customo.Api.Migrations
                         new
                         {
                             Id = 1,
-                            Name = "Chicken"
+                            IsAvailable = true,
+                            Name = "Chicken",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 2,
                             AllergenId = 6,
-                            Name = "Soy sauce"
+                            IsAvailable = true,
+                            Name = "Soy sauce",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 3,
-                            Name = "Vinegar"
+                            IsAvailable = true,
+                            Name = "Vinegar",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 4,
-                            Name = "Garlic"
+                            IsAvailable = true,
+                            Name = "Garlic",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 5,
-                            Name = "Bay leaf"
+                            IsAvailable = true,
+                            Name = "Bay leaf",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 6,
-                            Name = "Black pepper"
+                            IsAvailable = true,
+                            Name = "Black pepper",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 7,
                             AllergenId = 5,
-                            Name = "Canton noodles"
+                            IsAvailable = true,
+                            Name = "Canton noodles",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 8,
                             AllergenId = 8,
-                            Name = "Shrimp"
+                            IsAvailable = true,
+                            Name = "Shrimp",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 9,
                             AllergenId = 4,
-                            Name = "Egg"
+                            IsAvailable = true,
+                            Name = "Egg",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 10,
-                            Name = "Cabbage"
+                            IsAvailable = true,
+                            Name = "Cabbage",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 11,
-                            Name = "Carrots"
+                            IsAvailable = true,
+                            Name = "Carrots",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 12,
-                            Name = "Beef"
+                            IsAvailable = true,
+                            Name = "Beef",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 13,
                             AllergenId = 1,
-                            Name = "Peanut sauce"
+                            IsAvailable = true,
+                            Name = "Peanut sauce",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 14,
                             AllergenId = 8,
-                            Name = "Shrimp paste"
+                            IsAvailable = true,
+                            Name = "Shrimp paste",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 15,
-                            Name = "Eggplant"
+                            IsAvailable = true,
+                            Name = "Eggplant",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 16,
-                            Name = "String beans"
+                            IsAvailable = true,
+                            Name = "String beans",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 17,
-                            Name = "Bok choy"
+                            IsAvailable = true,
+                            Name = "Bok choy",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 18,
-                            Name = "Pork"
+                            IsAvailable = true,
+                            Name = "Pork",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 19,
-                            Name = "Onions"
+                            IsAvailable = true,
+                            Name = "Onions",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 20,
-                            Name = "Chili"
+                            IsAvailable = true,
+                            Name = "Chili",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 21,
-                            Name = "Calamansi"
+                            IsAvailable = true,
+                            Name = "Calamansi",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 22,
-                            Name = "Tamarind broth"
+                            IsAvailable = true,
+                            Name = "Tamarind broth",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 23,
                             AllergenId = 7,
-                            Name = "Fish sauce"
+                            IsAvailable = true,
+                            Name = "Fish sauce",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 24,
-                            Name = "Radish"
+                            IsAvailable = true,
+                            Name = "Radish",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 25,
-                            Name = "Kangkong"
+                            IsAvailable = true,
+                            Name = "Kangkong",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 26,
-                            Name = "Tomato"
+                            IsAvailable = true,
+                            Name = "Tomato",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 27,
                             AllergenId = 5,
-                            Name = "Lumpia wrapper"
+                            IsAvailable = true,
+                            Name = "Lumpia wrapper",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 28,
-                            Name = "Rice"
+                            IsAvailable = true,
+                            Name = "Rice",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 29,
-                            Name = "Shaved ice"
+                            IsAvailable = true,
+                            Name = "Shaved ice",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 30,
                             AllergenId = 3,
-                            Name = "Milk"
+                            IsAvailable = true,
+                            Name = "Milk",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 31,
-                            Name = "Sweet beans"
+                            IsAvailable = true,
+                            Name = "Sweet beans",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 32,
-                            Name = "Banana"
+                            IsAvailable = true,
+                            Name = "Banana",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 33,
                             AllergenId = 1,
-                            Name = "Peanut topping"
+                            IsAvailable = true,
+                            Name = "Peanut topping",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 34,
                             AllergenId = 3,
-                            Name = "Condensed milk"
+                            IsAvailable = true,
+                            Name = "Condensed milk",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 35,
                             AllergenId = 4,
-                            Name = "Egg yolks"
+                            IsAvailable = true,
+                            Name = "Egg yolks",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 36,
-                            Name = "Caramel"
+                            IsAvailable = true,
+                            Name = "Caramel",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 37,
-                            Name = "Tea"
+                            IsAvailable = true,
+                            Name = "Tea",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 38,
-                            Name = "Sugar syrup"
+                            IsAvailable = true,
+                            Name = "Sugar syrup",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 39,
-                            Name = "Ice"
+                            IsAvailable = true,
+                            Name = "Ice",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 40,
-                            Name = "Lemon"
+                            IsAvailable = true,
+                            Name = "Lemon",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 41,
-                            Name = "Mango"
+                            IsAvailable = true,
+                            Name = "Mango",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 42,
-                            Name = "Sugar"
+                            IsAvailable = true,
+                            Name = "Sugar",
+                            Unit = "portions"
                         },
                         new
                         {
                             Id = 43,
-                            Name = "Pork leg"
+                            IsAvailable = true,
+                            Name = "Pork leg",
+                            Unit = "portions"
                         });
                 });
 
@@ -585,6 +702,10 @@ namespace Customo.Api.Migrations
                     b.Property<bool>("IsRemovable")
                         .HasColumnType("bit");
 
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
                     b.HasKey("MenuItemId", "IngredientId");
 
                     b.HasIndex("IngredientId");
@@ -596,337 +717,393 @@ namespace Customo.Api.Migrations
                         {
                             MenuItemId = 1,
                             IngredientId = 1,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 1,
                             IngredientId = 2,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 1,
                             IngredientId = 3,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 1,
                             IngredientId = 4,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 1,
                             IngredientId = 5,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 1,
                             IngredientId = 6,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 2,
                             IngredientId = 7,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 2,
                             IngredientId = 1,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 2,
                             IngredientId = 8,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 2,
                             IngredientId = 9,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 2,
                             IngredientId = 10,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 2,
                             IngredientId = 11,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 2,
                             IngredientId = 4,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 3,
                             IngredientId = 12,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 3,
                             IngredientId = 13,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 3,
                             IngredientId = 14,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 3,
                             IngredientId = 15,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 3,
                             IngredientId = 16,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 3,
                             IngredientId = 17,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 4,
                             IngredientId = 18,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 4,
                             IngredientId = 2,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 4,
                             IngredientId = 9,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 4,
                             IngredientId = 19,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 4,
                             IngredientId = 20,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 4,
                             IngredientId = 21,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 5,
                             IngredientId = 18,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 5,
                             IngredientId = 22,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 5,
                             IngredientId = 23,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 5,
                             IngredientId = 24,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 5,
                             IngredientId = 25,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 5,
                             IngredientId = 26,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 6,
                             IngredientId = 43,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 6,
                             IngredientId = 2,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 6,
                             IngredientId = 4,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 7,
                             IngredientId = 18,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 7,
                             IngredientId = 27,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 7,
                             IngredientId = 9,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 7,
                             IngredientId = 11,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 7,
                             IngredientId = 19,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 8,
                             IngredientId = 28,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 9,
                             IngredientId = 29,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 9,
                             IngredientId = 30,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 9,
                             IngredientId = 31,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 9,
                             IngredientId = 32,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 9,
                             IngredientId = 33,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 10,
                             IngredientId = 35,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 10,
                             IngredientId = 34,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 10,
                             IngredientId = 36,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 11,
                             IngredientId = 37,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 11,
                             IngredientId = 38,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 11,
                             IngredientId = 39,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 11,
                             IngredientId = 40,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 12,
                             IngredientId = 41,
-                            IsRemovable = false
+                            IsRemovable = false,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 12,
                             IngredientId = 30,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 12,
                             IngredientId = 39,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         },
                         new
                         {
                             MenuItemId = 12,
                             IngredientId = 42,
-                            IsRemovable = true
+                            IsRemovable = true,
+                            Quantity = 1m
                         });
                 });
 
@@ -1128,12 +1305,19 @@ namespace Customo.Api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("TableNumber")
+                    b.Property<int?>("TableNumber")
                         .HasColumnType("int");
 
                     b.Property<decimal>("TotalAmount")
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasDefaultValue("DineIn");
 
                     b.HasKey("Id");
 
@@ -1201,6 +1385,46 @@ namespace Customo.Api.Migrations
                     b.HasIndex("OrderItemId");
 
                     b.ToTable("OrderItemOptions");
+                });
+
+            modelBuilder.Entity("Customo.Data.StockMovement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Change")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("IngredientId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("IngredientId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("StockMovements");
                 });
 
             modelBuilder.Entity("AllergenOrder", b =>
@@ -1296,6 +1520,23 @@ namespace Customo.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("OrderItem");
+                });
+
+            modelBuilder.Entity("Customo.Data.StockMovement", b =>
+                {
+                    b.HasOne("Customo.Data.Ingredient", "Ingredient")
+                        .WithMany()
+                        .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Customo.Data.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId");
+
+                    b.Navigation("Ingredient");
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("Customo.Data.Category", b =>

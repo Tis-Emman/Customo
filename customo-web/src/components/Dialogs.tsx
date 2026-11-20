@@ -42,7 +42,11 @@ type CustomizeProps = {
 };
 export function Customize({ dish, allergies, initialRemoved, onClose, onAdd }: CustomizeProps) {
   const [pick, setPick] = useState<Opt[]>(() => (["Size", "Swap"] as const).flatMap((t) => dish.options.filter((o) => o.type === t).slice(0, 1)));
-  const [gone, setGone] = useState<Ingredient[]>(initialRemoved);
+  // Start with the allergy fixes plus anything sold out (removable ingredients only) already left out
+  const [gone, setGone] = useState<Ingredient[]>(() =>
+    [...initialRemoved, ...dish.ingredients.filter((i) => i.removable && !i.available && !initialRemoved.some((r) => r.id === i.id))]);
+  // Something ran out while this window was open and is still in the dish
+  const blocked = dish.ingredients.filter((i) => !i.available && !gone.some((g) => g.id === i.id));
   const [qty, setQty] = useState(1);
   const toggle = (o: Opt) =>
     setPick((p) => o.type === "Extra" ? (p.includes(o) ? p.filter((x) => x !== o) : [...p, o]) : [...p.filter((x) => x.type !== o.type), o]);
@@ -68,10 +72,11 @@ export function Customize({ dish, allergies, initialRemoved, onClose, onAdd }: C
             {dish.ingredients.map((i) => {
               const off = gone.some((x) => x.id === i.id);
               const flagged = !off && i.allergen !== null && allergies.includes(i.allergen);
+              const soldOut = !i.available;
               return (
-                <button key={i.id} disabled={!i.removable} aria-pressed={!off} onClick={() => toggleIng(i)}
+                <button key={i.id} disabled={!i.removable || (soldOut && off)} aria-pressed={!off} onClick={() => toggleIng(i)}
                   className={`btn h-10 text-sm disabled:opacity-70 ${off ? "line-through opacity-60" : ""} ${flagged ? "!border-2 !border-honeyedge !bg-honey font-bold text-honeyink" : ""}`}>
-                  {off ? `No ${i.name.toLowerCase()}` : i.name}{flagged ? " ⚠" : ""}{!i.removable ? " (required)" : ""}
+                  {off ? `No ${i.name.toLowerCase()}` : i.name}{flagged ? " ⚠" : ""}{soldOut ? " (sold out)" : !i.removable ? " (required)" : ""}
                 </button>
               );
             })}
@@ -102,8 +107,15 @@ export function Customize({ dish, allergies, initialRemoved, onClose, onAdd }: C
           <span className="w-10 text-center text-xl font-bold">{qty}</span>
           <button className="btn h-12 w-12 text-2xl" aria-label="More" onClick={() => setQty(qty + 1)}>+</button>
         </div>
-        <button className="btn btn-primary flex-1" onClick={() => onAdd(pick, qty, gone)}>Add to order · {peso(sum)}</button>
+        <button className="btn btn-primary flex-1" disabled={blocked.length > 0} onClick={() => onAdd(pick, qty, gone)}>Add to order · {peso(sum)}</button>
       </div>
+      {blocked.length > 0 && (
+        <p role="alert" className="font-bold text-tomato">
+          {blocked.every((i) => i.removable)
+            ? `${blocked.map((i) => i.name).join(", ")} just sold out. Tap to leave it out, then add.`
+            : `Sorry, ${dish.name} just sold out.`}
+        </p>
+      )}
     </Modal>
   );
 }

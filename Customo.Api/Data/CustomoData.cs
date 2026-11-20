@@ -5,6 +5,9 @@ namespace Customo.Data;
 // ---------- Enums ----------
 // Remove is used only on order items, to record an ingredient the customer left out
 public enum OptionType { Size, Extra, Swap, Remove }
+public enum OrderType { DineIn, TakeOut }
+// Why stock changed: an order used it, a delivery came in, it was thrown away, or staff counted it
+public enum StockReason { Sale, Restock, Waste, Count }
 
 // ---------- Menu side (preloaded with seed data) ----------
 public class Category
@@ -40,6 +43,26 @@ public class Ingredient
     public string Name { get; set; } = null!;
     public int? AllergenId { get; set; }          // null when the ingredient has no common allergen
     public Allergen? Allergen { get; set; }
+
+    // ----- Inventory -----
+    public string Unit { get; set; } = "portions";
+    public decimal? Stock { get; set; }           // null = not tracked (never runs out on its own)
+    public decimal? LowAt { get; set; }           // warn the staff at or below this amount
+    public bool IsAvailable { get; set; } = true; // false = staff marked it sold out
+}
+
+// Every stock change is recorded, so the current count can always be explained
+public class StockMovement
+{
+    public int Id { get; set; }
+    public int IngredientId { get; set; }
+    public Ingredient Ingredient { get; set; } = null!;
+    public decimal Change { get; set; }           // + came in, - went out
+    public StockReason Reason { get; set; }
+    public int? OrderId { get; set; }             // set when an order used it
+    public Order? Order { get; set; }
+    public string? Note { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
 // Which ingredients a dish contains, and whether the customer may leave one out
@@ -50,6 +73,7 @@ public class MenuItemIngredient
     public int IngredientId { get; set; }
     public Ingredient Ingredient { get; set; } = null!;
     public bool IsRemovable { get; set; }
+    public decimal Quantity { get; set; } = 1;    // how much of the ingredient one serving uses (in its unit)
 }
 
 public class MenuItemOption
@@ -66,7 +90,8 @@ public class MenuItemOption
 public class Order
 {
     public int Id { get; set; }
-    public int TableNumber { get; set; }
+    public OrderType Type { get; set; }           // DineIn or TakeOut
+    public int? TableNumber { get; set; }         // null for take-out
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public decimal TotalAmount { get; set; }      // recomputed on the server
     public DateTime? CompletedAt { get; set; }    // null = still active on the kitchen screen
@@ -104,7 +129,8 @@ public class DiningTable
 {
     public int Number { get; set; }             // the table number is the key
     public string? ClaimToken { get; set; }     // secret kept in the customer's browser
-    public DateTime? OccupiedAt { get; set; }   // last activity; the hold expires after 3 hours
+    public DateTime? OccupiedAt { get; set; }   // last activity; an unused hold expires after 3 hours
+    public bool HasOrdered { get; set; }        // true once this party ordered: stays occupied until staff free it
 }
 
 // ---------- DbContext ----------
@@ -122,9 +148,22 @@ public class CustomoDbContext : DbContext
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<OrderItemOption> OrderItemOptions => Set<OrderItemOption>();
+    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        // Inventory amounts (allow halves, e.g. 0.5 kg)
+        b.Entity<Ingredient>().Property(x => x.Stock).HasPrecision(10, 2);
+        b.Entity<Ingredient>().Property(x => x.LowAt).HasPrecision(10, 2);
+        b.Entity<Ingredient>().Property(x => x.Unit).HasMaxLength(20);
+        b.Entity<MenuItemIngredient>().Property(x => x.Quantity).HasPrecision(10, 2);
+        b.Entity<StockMovement>().Property(x => x.Change).HasPrecision(10, 2);
+        b.Entity<StockMovement>().Property(x => x.Reason).HasConversion<string>().HasMaxLength(20);
+        b.Entity<StockMovement>().HasIndex(x => x.CreatedAt);
+
+        // Existing orders become dine-in
+        b.Entity<Order>().Property(x => x.Type).HasConversion<string>().HasMaxLength(10).HasDefaultValue(OrderType.DineIn);
+
         // Money columns
         b.Entity<MenuItem>().Property(x => x.Price).HasPrecision(10, 2);
         b.Entity<MenuItemOption>().Property(x => x.PriceDelta).HasPrecision(10, 2);

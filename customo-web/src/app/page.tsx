@@ -2,35 +2,45 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { claimTable, releaseTable } from "@/lib/api";
+import { claimTable, leaveTable } from "@/lib/api";
 import { useTables } from "@/lib/tables";
 import { useStore } from "@/lib/store";
 
+// Older versions kept only the table token under this key; still read it so those tablets keep their table
 const KEY = "customo-table-token";
 
 export default function Welcome() {
-  const { s, d } = useStore();
+  const { s, d, ready } = useStore();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
-  // The claim token lives in this browser, so a refresh doesn't lock the customer out of their own table
-  const saved = typeof window === "undefined" ? null : localStorage.getItem(KEY);
-  const { tables } = useTables(saved);
+  // Only used for loading tables, never shown, so reading it during the first render is safe
+  const [legacy] = useState<string | null>(() => {
+    try { return typeof window === "undefined" ? null : localStorage.getItem(KEY); } catch { return null; }
+  });
 
-  // After a refresh, take back the table this browser already holds
+  const token = s.tableToken ?? legacy;
+  const { tables, forToken, failed } = useTables(ready ? token : null);
+
   useEffect(() => {
+    if (!tables.length || forToken !== token || !token) return;
     const mine = tables.find((t) => t.mine);
-    if (mine && saved && !s.tableToken) d({ t: "table", n: mine.number, token: saved });
-  }, [tables, saved, s.tableToken, d]);
+    // After a refresh, take back the table this browser already holds
+    if (mine && !s.tableToken) d({ t: "table", n: mine.number, token });
+    // Staff freed our table (or the unused hold ran out): stop showing it as ours
+    if (!mine && s.tableToken === token) d({ t: "clearTable" });
+  }, [tables, forToken, token, s.tableToken, d]);
 
   const pickTable = async (n: number) => {
     setBusy(true); setNote("");
     try {
-      const token = await claimTable(n, saved);
-      if (!token) { setNote(`Table ${n} was just taken. Please pick another.`); return; }
-      if (s.tableToken && s.table !== n) releaseTable(s.table);   // give back the table held before
-      localStorage.setItem(KEY, token);
-      d({ t: "table", n, token });
+      const fresh = await claimTable(n, token);
+      if (!fresh) { setNote(`Table ${n} was just taken. Please pick another.`); return; }
+      // Give back a table picked by mistake. The API refuses if that party already ordered,
+      // so handing this tablet to a new group can never free a table where people are eating.
+      if (s.tableToken && s.table !== n) leaveTable(s.table, s.tableToken);
+      try { localStorage.setItem(KEY, fresh); } catch { /* storage blocked */ }
+      d({ t: "table", n, token: fresh });
     } catch {
       setNote("Can't reach the server. Please try again.");
     } finally {
@@ -38,11 +48,48 @@ export default function Welcome() {
     }
   };
 
+  const takeOut = () => {
+    if (s.tableToken) leaveTable(s.table, s.tableToken);   // only frees it if nothing was ordered there
+    d({ t: "clearTable" });
+    d({ t: "mode", m: "TakeOut" });
+    router.push("/allergies");
+  };
+
+  // Step 1: dine in or take out
+  if (s.mode !== "DineIn") {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-8 p-6 text-center">
+        <Image src="/logo.png" alt="Customo" width={220} height={220} priority className="rounded-full" />
+        <h1 className="font-display text-4xl font-bold">Welcome! How are you eating today?</h1>
+        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
+          <button onClick={() => d({ t: "mode", m: "DineIn" })}
+            className="flex h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[#CDBFAE] bg-white hover:border-tomato">
+            <span aria-hidden="true" className="text-5xl">🍽️</span>
+            <span className="font-display text-3xl font-bold">Dine in</span>
+            <span className="text-mute">Eat here at a table</span>
+          </button>
+          <button onClick={takeOut}
+            className="flex h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[#CDBFAE] bg-white hover:border-tomato">
+            <span aria-hidden="true" className="text-5xl">🛍️</span>
+            <span className="font-display text-3xl font-bold">Take out</span>
+            <span className="text-mute">Pack it to go</span>
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  // Step 2 (dine in): which table
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-6 p-6 text-center">
-      <Image src="/logo.png" alt="Customo" width={240} height={240} priority className="rounded-full" />
-      <h1 className="text-2xl text-mute">Welcome! Which table are you at?</h1>
-      {tables.length === 0 && <p className="text-mute">Loading tables… make sure the API is running.</p>}
+      <div className="flex w-full justify-start">
+        <button className="btn h-12 gap-1 pr-5 text-lg font-bold" onClick={() => { setNote(""); d({ t: "mode", m: null }); }}>
+          <span aria-hidden="true" className="text-2xl leading-none">‹</span> Back
+        </button>
+      </div>
+      <Image src="/logo.png" alt="Customo" width={180} height={180} priority className="rounded-full" />
+      <h1 className="text-2xl text-mute">Dine in. Which table are you at?</h1>
+      {tables.length === 0 && <p className="text-mute">{failed ? "Can't reach the server. Retrying…" : "Loading tables…"}</p>}
       <div className="grid grid-cols-4 gap-3 sm:grid-cols-6">
         {tables.map((t) => {
           const mine = s.tableToken !== null && s.table === t.number;

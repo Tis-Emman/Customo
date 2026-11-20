@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { completeOrder, releaseTable } from "@/lib/api";
+import Link from "next/link";
+import { completeOrder, fetchInventory, releaseTable, StockItem, stockStatus } from "@/lib/api";
+import { useLive } from "@/lib/live";
 import { useTables } from "@/lib/tables";
 import { useOrders } from "@/lib/orders";
 
@@ -8,6 +10,9 @@ export default function Kitchen() {
   const { orders, live, dismiss } = useOrders();
   const { tables } = useTables(null);
   const occupied = tables.filter((t) => t.taken);
+  const { data: stock } = useLive<StockItem[]>(fetchInventory, "MenuChanged", 30000);
+  const alerts = (stock ?? []).filter((i) => ["off", "out", "low"].includes(stockStatus(i))).length;
+  const takeOuts = orders.filter((o) => o.type === "TakeOut").length;
   const [arm, setArm] = useState<number | null>(null); // order waiting for a second tap
   const [failed, setFailed] = useState(false);
   const flagged = orders.filter((o) => o.allergies.length).length;
@@ -65,8 +70,14 @@ export default function Kitchen() {
         <h1 className="font-display text-4xl font-bold">Kitchen</h1>
         <div className="flex items-center gap-4">
           <span className="text-lg text-[#C9BBA6]">
-            {orders.length} active orders · {flagged} with allergy flags
+            {orders.length} active orders · {takeOuts} take-out · {flagged} with allergy flags
           </span>
+          <Link
+            href="/inventory"
+            className={`flex h-11 items-center gap-2 rounded-full px-4 font-bold ${alerts ? "bg-[#FBBF24] text-[#2B1600]" : "bg-[#3A342D]"}`}
+          >
+            Inventory{alerts > 0 && ` · ${alerts} low/out`}
+          </Link>
           <span
             className={`rounded-full px-4 py-2 font-bold ${live ? "bg-[#2F5D3A]" : "bg-[#7A2E1B]"}`}
           >
@@ -81,12 +92,16 @@ export default function Kitchen() {
           <button
             key={t.number}
             onClick={() => setFreeing(t.number)}
-            className="h-11 cursor-pointer rounded-full bg-[#3A342D] px-4 font-bold"
+            title={t.ordered ? "Ordered. Stays occupied until you free it." : "Picked on a tablet, no order yet"}
+            className={`h-11 cursor-pointer rounded-full px-4 font-bold ${t.ordered ? "bg-[#3A342D]" : "border-2 border-dashed border-[#6B5D4F] bg-transparent text-[#C9BBA6]"}`}
           >
-            Table {t.number} ✕
+            Table {t.number}{!t.ordered && " (no order yet)"} ✕
           </button>
         ))}
       </div>
+      <p className="-mt-4 mb-6 text-sm text-[#8F806C]">
+        Tables that ordered stay occupied until you free them here. Picked tables with no order free themselves after 3 hours.
+      </p>
       {failed && (
         <p role="alert" className="mb-4 rounded-xl bg-[#7A2E1B] p-3 font-bold">
           Could not mark the order as done. Check the connection and try again.
@@ -106,11 +121,21 @@ export default function Kitchen() {
             className={`flex flex-col gap-3 rounded-2xl bg-[#2B2621] p-5 ${o.allergies.length ? "border-[3px] border-[#FBBF24]" : "border-[3px] border-transparent"}`}
           >
             <div className="flex items-baseline justify-between">
-              <h2 className="font-display text-4xl font-bold">
-                Table {o.table}
-              </h2>
-              <span className="text-[#C9BBA6]">#{o.id}</span>
+              {o.type === "TakeOut" ? (
+                <h2 className="font-display text-4xl font-bold">
+                  <span className="mr-2 rounded-lg bg-[#5B8DEF] px-2 py-0.5 align-middle text-base text-[#0B1A33]">TAKE-OUT</span>
+                  #{o.id}
+                </h2>
+              ) : (
+                <h2 className="font-display text-4xl font-bold">
+                  Table {o.table}
+                </h2>
+              )}
+              {o.type !== "TakeOut" && <span className="text-[#C9BBA6]">#{o.id}</span>}
             </div>
+            {o.type === "TakeOut" && (
+              <div className="rounded-xl bg-[#1F3157] p-2 text-center font-bold text-[#BFD3FF]">Pack to go</div>
+            )}
             <div className="text-[#C9BBA6]">
               {new Date(o.createdAt).toLocaleTimeString([], {
                 hour: "2-digit",

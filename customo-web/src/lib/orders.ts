@@ -27,10 +27,19 @@ export function useOrders() {
       .then(() => { if (!dead) { setLive(true); load(); } })
       .catch(() => { if (!dead) timer = setTimeout(start, 3000); });
 
+    // Safety net: reload every 20 s and when the screen wakes up, so a missed live message can't hide an order
+    const poll = setInterval(load, 20000);
+    const onVisible = () => { if (document.visibilityState === "visible") load(); };
+    document.addEventListener("visibilitychange", onVisible);
+
     load();
     // Start on the next tick: React dev mode mounts effects twice, and this skips the throwaway first connection
     timer = setTimeout(start, 0);
-    return () => { dead = true; clearTimeout(timer); conn.stop(); };
+    return () => {
+      dead = true; clearTimeout(timer); clearInterval(poll);
+      document.removeEventListener("visibilitychange", onVisible);
+      conn.stop();
+    };
   }, []);
 
   const dismiss = (id: number) => setOrders((prev) => prev.filter((x) => x.id !== id));

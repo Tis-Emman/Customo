@@ -1,29 +1,34 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Header from "@/components/Header";
+import Header, { NeedsSession } from "@/components/Header";
 import { Customize, Warning } from "@/components/Dialogs";
 import { CATS, Dish, Ingredient } from "@/lib/menu";
 import { fetchMenu } from "@/lib/api";
-import { conflicts, fix, peso, total, unit, useStore } from "@/lib/store";
+import { useLive } from "@/lib/live";
+import { conflicts, fix, lineIssue, peso, total, unit, useStore } from "@/lib/store";
 
-export default function Menu() {
+export default function MenuPage() {
+  return <NeedsSession><Menu /></NeedsSession>;
+}
+
+function Menu() {
   const { s, d } = useStore();
   const router = useRouter();
   const [cat, setCat] = useState("All");
-  const [dish, setDish] = useState<Dish | null>(null);
+  const [dishId, setDishId] = useState<number | null>(null);
   const [warn, setWarn] = useState(false);
   const [pre, setPre] = useState<Ingredient[]>([]);
-  const [dishes, setDishes] = useState<Dish[] | null>(null);
-  const [failed, setFailed] = useState(false);
-  const load = () => { setFailed(false); fetchMenu().then(setDishes).catch(() => setFailed(true)); };
-  useEffect(() => { fetchMenu().then(setDishes).catch(() => setFailed(true)); }, []);
-  const pick = (x: Dish) => { setDish(x); setPre([]); setWarn(conflicts(x, s.allergies).length > 0); };
+  // Reloads when the kitchen changes stock, so sold-out dishes grey out on their own
+  const { data: dishes, failed, reload } = useLive<Dish[]>(fetchMenu, "MenuChanged", 30000);
+  const dish = dishes?.find((x) => x.id === dishId) ?? null;
+  const pick = (x: Dish) => { if (!x.available) return; setDishId(x.id); setPre([]); setWarn(conflicts(x, s.allergies).length > 0); };
+  const issues = s.cart.filter((l) => lineIssue(l, dishes)).length;
 
   return (
     <>
-      <Header />
+      <Header back="/allergies" />
       <main className="mx-auto grid max-w-7xl gap-6 p-6 lg:grid-cols-[1fr_320px]">
         <section className="flex flex-col gap-4">
           <div className="flex flex-wrap gap-2" role="tablist">
@@ -36,11 +41,19 @@ export default function Menu() {
             {s.allergies.length ? s.allergies.map((a) => <span key={a} className="rounded-full bg-honey px-4 py-2 font-bold text-honeyink">{a}</span>) : <span>None</span>}
             <Link href="/allergies" className="btn ml-auto">Change</Link>
           </div>
-          {failed && <p role="alert" className="rounded-2xl bg-honey p-4 font-bold text-honeyink">We can&apos;t reach the menu. Make sure the API is running. <button className="btn ml-2" onClick={load}>Try again</button></p>}
+          {failed && !dishes && <p role="alert" className="rounded-2xl bg-honey p-4 font-bold text-honeyink">We can&apos;t reach the menu. Make sure the API is running. <button className="btn ml-2" onClick={reload}>Try again</button></p>}
           {!dishes && !failed && <p className="text-mute">Loading the menu…</p>}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {(dishes ?? []).filter((x) => cat === "All" || x.cat === cat).map((x) => {
               const hit = conflicts(x, s.allergies);
+              if (!x.available) {
+                return (
+                  <div key={x.id} aria-disabled="true" className="flex min-h-44 flex-col gap-1.5 rounded-2xl border border-line bg-[#EFE7DA] p-4 text-left text-mute">
+                    <span className="flex w-full justify-between"><span className="font-display text-xl font-semibold line-through">{x.name}</span><b>{peso(x.price)}</b></span>
+                    <span className="mt-auto self-start rounded-full bg-ink px-3 py-1 text-sm font-bold text-cream">Sold out</span>
+                  </div>
+                );
+              }
               return (
                 <button key={x.id} onClick={() => pick(x)}
                   className={`flex min-h-44 cursor-pointer flex-col gap-1.5 rounded-2xl p-4 text-left ${hit.length ? "border-2 border-honeyedge bg-[#FFF7E0]" : "border border-line bg-white"}`}>
@@ -59,26 +72,35 @@ export default function Menu() {
         <aside className="flex h-fit flex-col gap-3 rounded-2xl border border-line bg-white p-5 lg:sticky lg:top-6">
           <h2 className="font-display text-2xl font-bold">Your order</h2>
           {s.cart.length === 0 && <p className="text-mute">Pick a dish to start your order.</p>}
-          {s.cart.map((l) => (
-            <div key={l.key} className="border-b border-line pb-3">
-              <div className="flex justify-between font-bold"><span>{l.qty}× {l.dish.name}</span><span>{peso(unit(l) * l.qty)}</span></div>
-              {l.removed.map((i) => <div key={i.id} className="text-sm font-bold text-honeyink">No {i.name.toLowerCase()}</div>)}
-              {l.opts.filter((o) => o.type === "Extra").map((o) => <div key={o.id} className="text-sm text-mute">+ {o.name}</div>)}
-            </div>
-          ))}
+          {s.cart.map((l) => {
+            const issue = lineIssue(l, dishes);
+            return (
+              <div key={l.key} className="border-b border-line pb-3">
+                <div className="flex justify-between font-bold"><span>{l.qty}× {l.dish.name}</span><span>{peso(unit(l) * l.qty)}</span></div>
+                {l.removed.map((i) => <div key={i.id} className="text-sm font-bold text-honeyink">No {i.name.toLowerCase()}</div>)}
+                {l.opts.filter((o) => o.type === "Extra").map((o) => <div key={o.id} className="text-sm text-mute">+ {o.name}</div>)}
+                {issue && (
+                  <div className="mt-1 flex items-center justify-between gap-2 text-sm font-bold text-tomato">
+                    <span>{issue}</span>
+                    <button className="btn h-9 text-sm" onClick={() => d({ t: "remove", key: l.key })}>Remove</button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
           <div className="flex items-baseline justify-between"><span className="text-mute">Total</span><span className="font-display text-3xl font-bold">{peso(total(s.cart))}</span></div>
-          <button className="btn btn-primary" disabled={!s.cart.length} onClick={() => router.push("/review")}>Review order</button>
+          <button className="btn btn-primary" disabled={!s.cart.length || issues > 0} onClick={() => router.push("/review")}>Review order</button>
         </aside>
       </main>
 
       {dish && warn && (
         <Warning dish={dish} hit={conflicts(dish, s.allergies)} fix={fix(dish, s.allergies)}
-          onCancel={() => setDish(null)} onContinue={() => setWarn(false)}
+          onCancel={() => setDishId(null)} onContinue={() => setWarn(false)}
           onFix={() => { setPre(fix(dish, s.allergies) ?? []); setWarn(false); }} />
       )}
       {dish && !warn && (
-        <Customize dish={dish} allergies={s.allergies} initialRemoved={pre} onClose={() => setDish(null)}
-          onAdd={(opts, qty, removed) => { d({ t: "add", l: { key: crypto.randomUUID(), dish, qty, opts, removed } }); setDish(null); }} />
+        <Customize key={dish.id} dish={dish} allergies={s.allergies} initialRemoved={pre} onClose={() => setDishId(null)}
+          onAdd={(opts, qty, removed) => { d({ t: "add", l: { key: crypto.randomUUID(), dish, qty, opts, removed } }); setDishId(null); }} />
       )}
     </>
   );
