@@ -17,6 +17,13 @@ builder.Services.AddCors(o => o.AddPolicy("web", p =>
     p.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
 
 var app = builder.Build();
+
+// Bring the database up to date on startup (adds new tables/columns from the Migrations folder).
+// Uses the app's own connection string, so cloud deploys need no manual "dotnet ef database update".
+// Does nothing when the database is already current; the retry policy covers a paused Azure database waking up.
+using (var scope = app.Services.CreateScope())
+    scope.ServiceProvider.GetRequiredService<CustomoDbContext>().Database.Migrate();
+
 // A table someone picked but never ordered from is given back after this long.
 // Once the party has ordered, the table stays occupied until staff free it on the kitchen screen.
 var tableHold = TimeSpan.FromHours(3);
